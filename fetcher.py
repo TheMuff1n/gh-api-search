@@ -146,17 +146,45 @@ fields = {
 }
 
 
+def store_state(year, field_index, term_index):
+    state = {
+        "year": year,
+        "field_index": field_index,
+        "term_index": term_index
+    }
+
+    with open("state.json", "w") as file:
+        json.dump(state, file)
+
+
+def load_state():
+    with open("state.json", "r") as file:
+        return json.load(file)
+
+
 def log_message(message):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"[{timestamp}] {message}")
 
 
 def main():
-    for year in range(2023, 2008, -1):
+    state = load_state()
+
+    year = state["year"]
+    field_index = state["field_index"]
+    term_index = state["term_index"]
+
+    keys_list = list(fields.keys())
+    while year > 2008:
         log_message(f"Processing year {year}")
-        for field, terms in fields.items():
-            for term in terms:
-                log_message(f"Processing field: {field}, term: {term}")
+        while field_index < len(keys_list):
+            field = keys_list[field_index]
+            terms = fields[field]
+            log_message(f"Processing field: {field}")
+            while len(terms) > term_index:
+                store_state(year, field_index, term_index)
+                term = terms[term_index]
+                log_message(f"Processing term: {term}")
                 results = fetch_all_pages(
                     f"{term} doi in:readme,description created:{year}", pageSize=50)
                 log_message(
@@ -170,7 +198,12 @@ def main():
                 with open(relative_path, "w") as file:
                     file.write(json.dumps(formatted_results, indent=2))
                 log_message(f"Results saved for {term} in {field} for {year}")
-
+                term_index += 1
+            field_index += 1
+            term_index = 0
+        year -= 1
+        field_index = 0
+        term_index = 0
 
 if __name__ == "__main__":
     main()
