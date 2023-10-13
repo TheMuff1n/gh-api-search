@@ -116,6 +116,9 @@ def format_repo(node):
     readme_main = repo["readme_main"]
     readme = readme_main if readme_main is not None else readme_master if readme_master is not None else None
     readme = readme["text"] if readme is not None else ""
+    target = repo["defaultBranchRef"]["target"] if repo["defaultBranchRef"] is not None else None
+    tree = target["tree"] if target is not None else None
+    entries = tree["entries"] if tree is not None else []
     new_repo = {
         "full_name": repo["nameWithOwner"],
         "url": repo["url"],
@@ -124,7 +127,7 @@ def format_repo(node):
         "forks": repo["forks"]["totalCount"],
         "stars": repo["stargazers"]["totalCount"],
         "description": repo["description"] if repo["description"] is not None else "",
-        "contents": list(map(format_content_element, repo["defaultBranchRef"]["target"]["tree"]["entries"])),
+        "contents": list(map(format_content_element, entries)),
         "readme": readme
     }
     return new_repo
